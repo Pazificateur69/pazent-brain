@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { FileText, FolderOpen, Plus, Search, Save, Trash2, Eye, Edit3, Menu, X, ChevronRight, Lock, Brain } from "lucide-react";
+import { FileText, FolderOpen, Plus, Search, Save, Trash2, Eye, Edit3, Menu, X, ChevronRight, Lock, Brain as BrainIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -120,7 +120,7 @@ export default function Brain() {
     <div className="flex items-center justify-center h-screen" style={{ background: "#0d1117" }}>
       <div className="w-80 animate-in">
         <div className="flex items-center gap-3 mb-8">
-          <Brain className="w-8 h-8" style={{ color: "#6e00ff" }} />
+          <BrainIcon className="w-8 h-8" style={{ color: "#6e00ff" }} />
           <div>
             <h1 className="text-xl font-semibold text-white">pazent.brain</h1>
             <p className="text-xs" style={{ color: "#8b949e" }}>knowledge base</p>
@@ -169,7 +169,7 @@ export default function Brain() {
       >
         {/* Logo */}
         <div className="flex items-center gap-2 px-4 py-4 border-b" style={{ borderColor: "#21262d" }}>
-          <Brain className="w-5 h-5 flex-shrink-0" style={{ color: "#6e00ff" }} />
+          <BrainIcon className="w-5 h-5 flex-shrink-0" style={{ color: "#6e00ff" }} />
           <span className="font-semibold text-sm text-white whitespace-nowrap">pazent.brain</span>
           <span className="ml-auto text-xs px-1.5 py-0.5 rounded" style={{ background: "#21262d", color: "#8b949e" }}>
             {notes.length}
@@ -302,7 +302,7 @@ export default function Brain() {
         <div className="flex-1 overflow-hidden">
           {!active ? (
             <div className="flex flex-col items-center justify-center h-full gap-4" style={{ color: "#8b949e" }}>
-              <Brain className="w-16 h-16 opacity-20" style={{ color: "#6e00ff" }} />
+              <BrainIcon className="w-16 h-16 opacity-20" style={{ color: "#6e00ff" }} />
               <p className="text-sm">Sélectionne une note ou crée-en une nouvelle</p>
             </div>
           ) : preview ? (
