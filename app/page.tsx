@@ -16,6 +16,7 @@ interface FolderNode { name: string; notes: Note[]; subfolders: Record<string, F
 
 const PASSWORD_KEY = "pazent_brain_auth";
 const FAVS_KEY = "pazent_brain_favs";
+const THEME_KEY = "pazent_brain_theme";
 
 const TEMPLATES: Record<string, string> = {
   "Writeup CTF": `# Writeup — [Nom du challenge]
@@ -347,6 +348,7 @@ export default function Brain() {
   const [showTOC, setShowTOC] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -354,6 +356,8 @@ export default function Brain() {
     if (s) { setPassword(s); setAuthed(true); }
     const favs = localStorage.getItem(FAVS_KEY);
     if (favs) setFavorites(JSON.parse(favs));
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme) setDarkMode(theme === "dark");
     setLoading(false);
   }, []);
 
@@ -421,6 +425,12 @@ export default function Brain() {
     setFavorites(newFavs); localStorage.setItem(FAVS_KEY, JSON.stringify(newFavs));
   }
 
+  function toggleTheme() {
+    const next = !darkMode;
+    setDarkMode(next);
+    localStorage.setItem(THEME_KEY, next ? "dark" : "light");
+  }
+
   async function searchNotes(query: string) {
     if (!query.trim()) { setSearchResults(null); return; }
     const results: { note: Note; excerpt: string }[] = [];
@@ -477,7 +487,16 @@ export default function Brain() {
   if (!authed) return <AuthScreen onAuth={handleAuth} />;
 
   return (
-    <div style={{ display:"flex",height:"100vh",background:"#0d1117",color:"#e6edf3",fontFamily:"'Inter',sans-serif",overflow:"hidden" }}>
+    const bg = darkMode ? "#0d1117" : "#f6f8fa";
+    const surface = darkMode ? "#161b22" : "#ffffff";
+    const border = darkMode ? "#21262d" : "#d0d7de";
+    const text = darkMode ? "#e6edf3" : "#1f2328";
+    const muted = darkMode ? "#8b949e" : "#656d76";
+    const accent = "#6e00ff";
+    const editorBg = darkMode ? "#0d1117" : "#ffffff";
+
+    return (
+    <div style={{ display:"flex",height:"100vh",background:bg,color:text,fontFamily:"'Inter',sans-serif",overflow:"hidden" }}>
 
       {/* Sidebar */}
       {!focusMode && (
@@ -491,9 +510,14 @@ export default function Brain() {
                 <div style={{ fontWeight:700,fontSize:14,color:"#fff",letterSpacing:"-0.3px" }}>pazent.brain</div>
                 <div style={{ fontSize:11,color:"#8b949e" }}>{notes.length} notes</div>
               </div>
-              <button onClick={fetchNotes} style={{ marginLeft:"auto",background:"none",border:"none",cursor:"pointer",color:"#8b949e",padding:4,borderRadius:4 }}>
-                <RefreshCw size={13} />
-              </button>
+              <div style={{ marginLeft:"auto",display:"flex",gap:4 }}>
+                <button onClick={toggleTheme} style={{ background:"none",border:"none",cursor:"pointer",color:"#8b949e",padding:4,borderRadius:4 }} title={darkMode ? "Mode clair" : "Mode sombre"}>
+                  {darkMode ? "☀️" : "🌙"}
+                </button>
+                <button onClick={fetchNotes} style={{ background:"none",border:"none",cursor:"pointer",color:"#8b949e",padding:4,borderRadius:4 }}>
+                  <RefreshCw size={13} />
+                </button>
+              </div>
             </div>
           </div>
 
