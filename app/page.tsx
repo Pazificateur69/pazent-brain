@@ -1091,7 +1091,7 @@ export default function Brain() {
           </div>
         )}
 
-        {/* Focus save */}}
+        {/* Focus save */}
         {focusMode&&active&&(
           <div style={{position:"fixed",bottom:24,right:24,display:"flex",gap:8,zIndex:200}}>
             <button onClick={()=>setFocusMode(false)} style={{padding:"8px 12px",background:t.surface,border:`1px solid ${t.border}`,borderRadius:8,color:t.muted,cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontSize:13}}><Minimize2 size={14}/> Quitter</button>
