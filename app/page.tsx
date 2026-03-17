@@ -565,7 +565,7 @@ export default function Brain() {
     const file=imageItem.getAsFile();
     if(!file)return;
     const fd=new FormData();
-    fd.append("file",new File([file],`paste-${Date.now()}.png`,{type:"image/png"}));
+    fd.append("file", file);
     fd.append("folder","files/images");
     const res=await fetch("/api/upload",{method:"POST",headers:{"x-app-password":password},body:fd});
     const data=await res.json();
