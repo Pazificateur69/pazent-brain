@@ -154,17 +154,22 @@ function extractTags(content: string): string[] {
     const m = fm[1].match(/tags:\s*\[([^\]]+)\]/);
     if (m) tags.push(...m[1].split(",").map(t => t.trim()));
   }
-  const inline = content.matchAll(/#([a-zA-Z][a-zA-Z0-9_-]*)/g);
-  for (const m of inline) if (!tags.includes(m[1])) tags.push(m[1]);
+  const inlineRegex = /#([a-zA-Z][a-zA-Z0-9_-]*)/g;
+  let inlineMatch;
+  while ((inlineMatch = inlineRegex.exec(content)) !== null) {
+    if (!tags.includes(inlineMatch[1])) tags.push(inlineMatch[1]);
+  }
   return tags;
 }
 
 function extractHeadings(content: string): { level: number; text: string; id: string }[] {
-  return Array.from(content.matchAll(/^(#{1,3})\s+(.+)$/gm)).map(m => ({
-    level: m[1].length,
-    text: m[2],
-    id: m[2].toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-  }));
+  const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+  const headings: { level: number; text: string; id: string }[] = [];
+  let m;
+  while ((m = headingRegex.exec(content)) !== null) {
+    headings.push({ level: m[1].length, text: m[2], id: m[2].toLowerCase().replace(/[^a-z0-9]+/g, "-") });
+  }
+  return headings;
 }
 
 function wordCount(text: string) { return text.trim().split(/\s+/).filter(Boolean).length; }
