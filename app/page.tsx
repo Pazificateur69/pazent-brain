@@ -486,16 +486,13 @@ export default function Brain() {
   if (loading) return <div style={{ display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#0d1117",color:"#8b949e",fontSize:14 }}>chargement...</div>;
   if (!authed) return <AuthScreen onAuth={handleAuth} />;
 
-  return (
-    const bg = darkMode ? "#0d1117" : "#f6f8fa";
-    const surface = darkMode ? "#161b22" : "#ffffff";
-    const border = darkMode ? "#21262d" : "#d0d7de";
-    const text = darkMode ? "#e6edf3" : "#1f2328";
-    const muted = darkMode ? "#8b949e" : "#656d76";
-    const accent = "#6e00ff";
-    const editorBg = darkMode ? "#0d1117" : "#ffffff";
+  const bg = darkMode ? "#0d1117" : "#f6f8fa";
+  const surface = darkMode ? "#161b22" : "#ffffff";
+  const border = darkMode ? "#21262d" : "#d0d7de";
+  const text = darkMode ? "#e6edf3" : "#1f2328";
+  const muted = darkMode ? "#8b949e" : "#656d76";
 
-    return (
+  return (
     <div style={{ display:"flex",height:"100vh",background:bg,color:text,fontFamily:"'Inter',sans-serif",overflow:"hidden" }}>
 
       {/* Sidebar */}
