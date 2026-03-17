@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
+import JSZip from "jszip";
 import {
   FileText, FolderOpen, Folder, Plus, Search, Save, Trash2, Eye, Edit3,
   ChevronRight, ChevronDown, Download, Code, Hash, AlignLeft, Clock,
@@ -19,6 +20,8 @@ interface FolderNode { name: string; notes: Note[]; subfolders: Record<string, F
 const PASSWORD_KEY = "pazent_brain_auth";
 const FAVS_KEY = "pazent_brain_favs";
 const THEME_KEY = "pazent_brain_theme";
+const WRAP_KEY = "pazent_brain_wrap";
+const AUTOSAVE_KEY = "pazent_brain_autosave";
 
 interface Theme {
   bg: string; surface: string; surface2: string; border: string;
@@ -433,7 +436,7 @@ function NoteRow({ note, active, favorites, t, onToggleFav, onClick, onRename }:
 export default function Brain() {
   const [notes,setNotes]=useState<Note[]>([]);
   const [active,setActive]=useState<Note|null>(null);
-  const [view,setView]=useState<"dashboard"|"notes"|"drive">("dashboard");
+  const [view,setView]=useState<"dashboard"|"notes"|"drive"|"trash">("dashboard");
   const [content,setContent]=useState("");
   const [originalContent,setOriginalContent]=useState("");
   const [editorMode,setEditorMode]=useState<"edit"|"preview"|"split">("edit");
@@ -460,6 +463,11 @@ export default function Brain() {
   const [showTOC,setShowTOC]=useState(false);
   const [showQuickCapture,setShowQuickCapture]=useState(false);
   const [focusMode,setFocusMode]=useState(false);
+  const [wordWrap,setWordWrap]=useState(true);
+  const [autoSave,setAutoSave]=useState(true);
+  const [autoSaving,setAutoSaving]=useState(false);
+  const [trashNotes,setTrashNotes]=useState<Note[]>([]);
+  const [wikiSuggest,setWikiSuggest]=useState<{notes:Note[];query:string;pos:number}|null>(null);
   const [sidebarOpen,setSidebarOpen]=useState(true);
   const [isMobile,setIsMobile]=useState(false);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
@@ -483,6 +491,10 @@ export default function Brain() {
     try{const f=localStorage.getItem(FAVS_KEY);if(f)setFavorites(JSON.parse(f));}catch{}
     const th=localStorage.getItem(THEME_KEY);
     setDarkMode(th!=="light");
+    const wrap=localStorage.getItem(WRAP_KEY);
+    if(wrap!==null) setWordWrap(wrap==="true");
+    const as=localStorage.getItem(AUTOSAVE_KEY);
+    if(as!==null) setAutoSave(as==="true");
     setLoading(false);
   },[]);
 
@@ -492,10 +504,53 @@ export default function Brain() {
     setNotes(Array.isArray(data)?data:[]);
   },[]);
 
-  useEffect(()=>{if(authed)fetchNotes();},[authed,fetchNotes]);
+  const fetchTrash=useCallback(async()=>{
+    const res=await fetch("/api/notes");
+    const data=await res.json();
+    setTrashNotes(Array.isArray(data)?data.filter((n:Note)=>n.path.includes("_trash")):[]);
+  },[]);
+
+  useEffect(()=>{if(authed){fetchNotes();fetchTrash();}},[authed,fetchNotes,fetchTrash]);
 
   function handleAuth(pw:string){sessionStorage.setItem(PASSWORD_KEY,pw);setPassword(pw);setAuthed(true);}
   function toggleTheme(){const n=!darkMode;setDarkMode(n);localStorage.setItem(THEME_KEY,n?"dark":"light");}
+
+  function toggleWordWrap(){const n=!wordWrap;setWordWrap(n);localStorage.setItem(WRAP_KEY,String(n));}
+  function toggleAutoSave(){const n=!autoSave;setAutoSave(n);localStorage.setItem(AUTOSAVE_KEY,String(n));}
+
+  async function exportAllNotes(){
+    const zip=new JSZip();
+    const folder=zip.folder("pazent-brain-notes");
+    for(const note of notes){
+      try{
+        const res=await fetch(`/api/notes?path=${encodeURIComponent(note.path)}`);
+        const data=await res.json();
+        if(data.content) folder?.file(note.path.replace(/^notes\//,""),data.content);
+      }catch{}
+    }
+    const blob=await zip.generateAsync({type:"blob"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`pazent-brain-export-${new Date().toISOString().slice(0,10)}.zip`;
+    a.click();
+  }
+
+  async function restoreNote(note:Note){
+    const res=await fetch(`/api/notes?path=${encodeURIComponent(note.path)}`);
+    const data=await res.json();
+    const newPath=note.path.replace("_trash/","");
+    await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json","x-app-password":password},body:JSON.stringify({path:newPath,content:data.content||""})});
+    await fetch("/api/notes",{method:"DELETE",headers:{"Content-Type":"application/json","x-app-password":password},body:JSON.stringify({path:note.path,sha:data.sha})});
+    fetchNotes();fetchTrash();
+  }
+
+  async function deleteForever(note:Note){
+    if(!confirm(`Supprimer définitivement "${note.name}" ?`))return;
+    const res=await fetch(`/api/notes?path=${encodeURIComponent(note.path)}`);
+    const data=await res.json();
+    await fetch("/api/notes",{method:"DELETE",headers:{"Content-Type":"application/json","x-app-password":password},body:JSON.stringify({path:note.path,sha:data.sha})});
+    fetchTrash();
+  }
 
   async function openNote(note:Note){
     const res=await fetch(`/api/notes?path=${encodeURIComponent(note.path)}`);
@@ -572,6 +627,19 @@ export default function Brain() {
     window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);
   });
 
+  // Auto-save debounce
+  useEffect(()=>{
+    if(!autoSave||!active||content===originalContent)return;
+    const timer=setTimeout(async()=>{
+      if(content===originalContent)return;
+      setAutoSaving(true);
+      await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json","x-app-password":password},body:JSON.stringify({path:active.path,content,sha:active.sha})});
+      const updated=await fetch(`/api/notes?path=${encodeURIComponent(active.path)}`).then(r=>r.json());
+      setActive(updated);setOriginalContent(content);setAutoSaving(false);
+    },2000);
+    return()=>clearTimeout(timer);
+  },[content,active,originalContent,autoSave,password]);
+
   const isDirty=content!==originalContent;
   const tree=buildTree(notes);
   const folders=Object.keys(tree.subfolders);
@@ -615,7 +683,7 @@ export default function Brain() {
 
         {/* Nav tabs */}
         <div style={{display:"flex",padding:"8px 10px",gap:4,borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
-          {([["dashboard","📊","Dashboard"],["notes","📝","Notes"],["drive","📁","Drive"]] as const).map(([v,icon,label])=>(
+          {([["dashboard","📊","Dashboard"],["notes","📝","Notes"],["drive","📁","Drive"],["trash","🗑️","Corbeille"]] as const).map(([v,icon,label])=>(
             <button key={v} onClick={()=>{setView(v);if(isMobile)setSidebarOpen(false);}}
               style={{flex:1,padding:"6px 4px",background:view===v?t.accentBg:"none",border:`1px solid ${view===v?t.accent+"44":t.border}`,borderRadius:7,color:view===v?t.accent:t.muted,fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
               <span style={{fontSize:14}}>{icon}</span><span>{label}</span>
@@ -785,6 +853,7 @@ export default function Brain() {
                     </span>
                   )}
                   {isDirty&&<span style={{width:6,height:6,borderRadius:"50%",background:t.accent,flexShrink:0}}/>}
+                  {autoSaving&&<span style={{fontSize:11,color:t.muted,marginLeft:4}}>Sauvegarde auto...</span>}
                 </div>
                 <span style={{fontSize:12,color:t.muted,flexShrink:0,display:"flex",gap:8}}>
                   <span style={{display:"flex",alignItems:"center",gap:3}}><AlignLeft size={10}/>{wordCount(content)}</span>
@@ -808,7 +877,7 @@ export default function Brain() {
                     <button onClick={()=>setShowDownload(!showDownload)} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:t.surface,border:`1px solid ${t.border}`,borderRadius:7,color:t.muted,fontSize:12,cursor:"pointer"}}><Download size={13}/> Exporter</button>
                     {showDownload&&(
                       <div style={{position:"absolute",top:"calc(100% + 6px)",right:0,background:t.surface,border:`1px solid ${t.border}`,borderRadius:10,padding:6,zIndex:100,minWidth:170,boxShadow:`0 8px 32px ${t.shadowColor}`}}>
-                        {[{label:"Markdown (.md)",fn:downloadMd},{label:"HTML (.html)",fn:downloadHtml},{label:"Texte brut (.txt)",fn:downloadTxt},{label:"PDF (imprimer)",fn:printPdf}].map(({label,fn})=>(
+                        {[{label:"Markdown (.md)",fn:downloadMd},{label:"HTML (.html)",fn:downloadHtml},{label:"Texte brut (.txt)",fn:downloadTxt},{label:"PDF (imprimer)",fn:printPdf},{label:"Tout exporter (.zip)",fn:exportAllNotes}].map(({label,fn})=>(
                           <button key={label} onClick={()=>{fn();setShowDownload(false);}} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"8px 12px",background:"none",border:"none",borderRadius:7,color:t.text,fontSize:13,cursor:"pointer",textAlign:"left"}}
                             onMouseEnter={e=>(e.currentTarget.style.background=t.hoverBg)} onMouseLeave={e=>(e.currentTarget.style.background="none")}>
                             {label}
@@ -843,9 +912,19 @@ export default function Brain() {
               <button key={i} onClick={()=>insertMd(textareaRef,b,a,p)} style={{padding:"3px 7px",background:"none",border:"none",borderRadius:5,color:t.muted,cursor:"pointer",flexShrink:0}}
                 onMouseEnter={e=>(e.currentTarget.style.background=t.hoverBg)} onMouseLeave={e=>(e.currentTarget.style.background="none")}>{icon}</button>
             ))}
-            <button onClick={()=>setShowQuickCapture(true)} style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,padding:"3px 10px",background:"none",border:`1px solid ${t.border}`,borderRadius:5,color:t.muted,cursor:"pointer",fontSize:12,flexShrink:0}}>
-              <Zap size={11}/> Capture
-            </button>
+            <div style={{marginLeft:"auto",display:"flex",gap:4}}>
+              <button onClick={toggleWordWrap} title={wordWrap?"Désactiver word wrap":"Activer word wrap"}
+                style={{padding:"3px 8px",background:wordWrap?t.accentBg:"none",border:`1px solid ${wordWrap?t.accent+"44":t.border}`,borderRadius:5,color:wordWrap?t.accent:t.muted,cursor:"pointer",fontSize:11,flexShrink:0}}>
+                Wrap
+              </button>
+              <button onClick={toggleAutoSave} title={autoSave?"Désactiver auto-save":"Activer auto-save"}
+                style={{padding:"3px 8px",background:autoSave?t.accentBg:"none",border:`1px solid ${autoSave?t.accent+"44":t.border}`,borderRadius:5,color:autoSave?t.accent:t.muted,cursor:"pointer",fontSize:11,flexShrink:0}}>
+                Auto
+              </button>
+              <button onClick={()=>setShowQuickCapture(true)} style={{padding:"3px 8px",background:"none",border:`1px solid ${t.border}`,borderRadius:5,color:t.muted,cursor:"pointer",fontSize:11,flexShrink:0,display:"flex",alignItems:"center",gap:4}}>
+                <Zap size={11}/> Capture
+              </button>
+            </div>
           </div>
         )}
 
@@ -853,6 +932,49 @@ export default function Brain() {
         <div style={{flex:1,overflow:"hidden",display:"flex"}}>
           {view==="dashboard"&&<Dashboard notes={notes} favorites={favorites} t={t} onOpenNote={openNote}/>}
           {view==="drive"&&<DriveView t={t} password={password}/>}
+          {view==="trash"&&(
+            <div style={{flex:1,overflowY:"auto",padding:"24px 20px"}}>
+              <div style={{maxWidth:800,margin:"0 auto"}}>
+                <div style={{marginBottom:20}}>
+                  <div style={{fontSize:22,fontWeight:700,color:t.text,marginBottom:4}}>🗑️ Corbeille</div>
+                  <div style={{fontSize:13,color:t.muted}}>{trashNotes.length} note{trashNotes.length!==1?"s":""} dans la corbeille</div>
+                </div>
+                {trashNotes.length===0?(
+                  <div style={{textAlign:"center",padding:"40px 0",color:t.muted}}>
+                    <div style={{fontSize:40,marginBottom:12}}>✨</div>
+                    <div>La corbeille est vide</div>
+                  </div>
+                ):(
+                  <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,overflow:"hidden"}}>
+                    {trashNotes.map((note,i)=>(
+                      <div key={note.path} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderBottom:i<trashNotes.length-1?`1px solid ${t.border}`:"none"}}>
+                        <FileText size={16} color={t.muted}/>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:14,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{note.path.split("/").pop()?.replace(".md","")}</div>
+                          <div style={{fontSize:11,color:t.muted}}>{note.path}</div>
+                        </div>
+                        <div style={{display:"flex",gap:6,flexShrink:0}}>
+                          <button onClick={()=>restoreNote(note)} style={{padding:"6px 12px",background:t.accentBg,border:`1px solid ${t.accent}44`,borderRadius:7,color:t.accent,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                            Restaurer
+                          </button>
+                          <button onClick={()=>deleteForever(note)} style={{padding:"6px 10px",background:"none",border:`1px solid ${t.border}`,borderRadius:7,color:t.muted,cursor:"pointer"}}
+                            onMouseEnter={e=>{e.currentTarget.style.color="#ff4444";e.currentTarget.style.borderColor="#ff444444";}} onMouseLeave={e=>{e.currentTarget.style.color=t.muted;e.currentTarget.style.borderColor=t.border;}}>
+                            <Trash2 size={12}/>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {trashNotes.length>0&&(
+                  <button onClick={async()=>{if(!confirm("Vider toute la corbeille ?"))return;for(const n of trashNotes)await deleteForever(n);}}
+                    style={{marginTop:12,padding:"8px 16px",background:"none",border:`1px solid #ff444444`,borderRadius:8,color:"#ff4444",fontSize:13,cursor:"pointer"}}>
+                    Vider la corbeille
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           {view==="notes"&&(
             !active?(
               <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,color:t.muted,padding:20}}>
@@ -870,7 +992,7 @@ export default function Brain() {
                 {(editorMode==="edit"||editorMode==="split")&&(
                   <div style={{flex:1,overflow:"hidden",borderRight:editorMode==="split"?`1px solid ${t.border}`:"none"}}>
                     <textarea ref={textareaRef} value={content} onChange={e=>setContent(e.target.value)}
-                      style={{width:"100%",height:"100%",padding:focusMode?"60px 80px":isMobile?"16px":"32px 48px",background:t.editorBg,color:t.text,border:"none",outline:"none",resize:"none",fontFamily:"'JetBrains Mono',monospace",fontSize:isMobile?13:14,lineHeight:1.9,caretColor:"#00d4ff"}}
+                      style={{width:"100%",height:"100%",padding:focusMode?"60px 80px":isMobile?"16px":"32px 48px",background:t.editorBg,color:t.text,border:"none",outline:"none",resize:"none",fontFamily:"'JetBrains Mono',monospace",fontSize:isMobile?13:14,lineHeight:1.9,caretColor:"#00d4ff",whiteSpace:wordWrap?"pre-wrap":"pre",overflowX:wordWrap?"hidden":"auto"}}
                       placeholder="Commence à écrire en Markdown..." spellCheck={false}/>
                   </div>
                 )}
