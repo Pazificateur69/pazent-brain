@@ -417,7 +417,7 @@ export default function Brain() {
                   </>
                 )}
                 <ChevronRight size={12} />
-                <span style={{ color:"#e6edf3", fontWeight:500, truncate:true }}>{active.name}</span>
+                <span style={{ color:"#e6edf3", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{active.name}</span>
                 {isDirty && <span style={{ width:6, height:6, borderRadius:"50%", background:"#6e00ff", flexShrink:0 }} title="Non sauvegardé" />}
               </div>
 
