@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listNotes, getNote, saveNote, deleteNote } from "@/lib/github";
+import { listNotes, getNote, saveNote, deleteNote } from "../github";
 
 function checkAuth(req: NextRequest) {
   const auth = req.headers.get("x-app-password");
