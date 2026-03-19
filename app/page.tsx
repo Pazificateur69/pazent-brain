@@ -463,6 +463,10 @@ export default function Brain() {
   const [showTOC,setShowTOC]=useState(false);
   const [showQuickCapture,setShowQuickCapture]=useState(false);
   const [focusMode,setFocusMode]=useState(false);
+  const [dragOver,setDragOver]=useState<string|null>(null);
+  const [dragNote,setDragNote]=useState<Note|null>(null);
+  const [newFolderName,setNewFolderName]=useState("");
+  const [creatingFolder,setCreatingFolder]=useState<string|null>(null);
   const [showShare,setShowShare]=useState(false);
   const [shareUrl,setShareUrl]=useState<string|null>(null);
   const [sharing,setSharing]=useState(false);
@@ -642,6 +646,33 @@ export default function Brain() {
 
   function toggleFav(path:string){const n=favorites.includes(path)?favorites.filter(f=>f!==path):[...favorites,path];setFavorites(n);localStorage.setItem(FAVS_KEY,JSON.stringify(n));}
 
+  async function moveNote(note: Note, targetFolder: string) {
+    const filename = note.path.split("/").pop() || "";
+    const newPath = targetFolder ? `${targetFolder}/${filename}` : `notes/${filename}`;
+    if (newPath === note.path) return;
+    await fetch("/api/move", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-app-password": password },
+      body: JSON.stringify({ oldPath: note.path, newPath }),
+    });
+    fetchNotes();
+    if (active?.path === note.path) openNote({ path: newPath, name: note.name });
+  }
+
+  async function createFolder(parentPath: string, name: string) {
+    const folderPath = parentPath ? `${parentPath}/${name}` : `notes/${name}`;
+    await fetch("/api/folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-app-password": password },
+      body: JSON.stringify({ path: folderPath }),
+    });
+    fetchNotes();
+    setCreatingFolder(null);
+    setNewFolderName("");
+    // Auto-expand the new folder
+    setExpandedFolders(prev => new Set([...prev, name]));
+  }
+
   async function doSearch(query:string){
     if(!query.trim()){setSearchResults(null);return;}
     const results:{note:Note;excerpt:string}[]=[];
@@ -790,7 +821,7 @@ export default function Brain() {
                 <div style={{padding:"4px 8px",fontSize:11,color:t.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:4}}>{searchResults.length} résultat{searchResults.length!==1?"s":""}</div>
                 {searchResults.map(r=>(
                   <div key={r.note.path}>
-                    <NoteRow note={r.note} active={active} favorites={favorites} t={t} onToggleFav={toggleFav} onClick={()=>openNote(r.note)} onRename={()=>{setRenaming(r.note);setRenameTo(r.note.name);}}/>
+                    <NoteRow note={r.note} active={active} favorites={favorites} t={t} onToggleFav={toggleFav} onClick={()=>openNote(r.note)} onRename={()=>{setRenaming(r.note);setRenameTo(r.note.name);}} onDragStart={n=>setDragNote(n)}/>
                     <div style={{fontSize:11,color:t.muted,padding:"0 8px 6px 28px",lineHeight:1.4}}>{r.excerpt.slice(0,120)}</div>
                   </div>
                 ))}
@@ -824,8 +855,10 @@ export default function Brain() {
                         {folder}
                         <span style={{marginLeft:"auto",fontSize:10,opacity:.6}}>{tree.subfolders[folder].notes.length}</span>
                       </button>
-                      <button onClick={()=>{setNewNoteFolder(`notes/${folder}`);setCreating(true);}} style={{padding:"3px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:4,opacity:.4}}
-                        onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".4")}><Plus size={11}/></button>
+                      <button onClick={()=>{setNewNoteFolder(`notes/${folder}`);setCreating(true);}} style={{padding:"3px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:4,opacity:.5}} title="Nouvelle note ici"
+                        onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".5")}><Plus size={11}/></button>
+                      <button onClick={()=>setCreatingFolder(folder)} style={{padding:"3px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:4,opacity:.5}} title="Nouveau sous-dossier"
+                        onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".5")}>📁</button>
                     </div>
                     {expandedFolders.has(folder)&&(
                       <div style={{paddingLeft:12}}>
