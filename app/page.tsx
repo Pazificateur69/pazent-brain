@@ -416,7 +416,7 @@ function QuickCapture({ t, folders, password, onCreated, onClose }: { t:Theme; f
 }
 
 // ─── Note Row ─────────────────────────────────────────────────────────────────
-function NoteRow({ note, active, favorites, t, onToggleFav, onClick, onRename }: { note:Note; active:Note|null; favorites:string[]; t:Theme; onToggleFav:(p:string)=>void; onClick:()=>void; onRename:()=>void }) {
+function NoteRow({ note, active, favorites, t, onToggleFav, onClick, onRename, onDragStart }: { note:Note; active:Note|null; favorites:string[]; t:Theme; onToggleFav:(p:string)=>void; onClick:()=>void; onRename:()=>void; onDragStart?:(n:Note)=>void }) {
   const isActive=active?.path===note.path, isFav=favorites.includes(note.path);
   const [hov,setHov]=useState(false);
   const name=note.path.split("/").pop()?.replace(".md","")||note.name;
