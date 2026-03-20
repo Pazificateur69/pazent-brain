@@ -415,6 +415,91 @@ function QuickCapture({ t, folders, password, onCreated, onClose }: { t:Theme; f
   );
 }
 
+
+// ─── FolderTree — Recursive folder component ─────────────────────────────────
+function FolderTree({ folderName, node, path, depth, active, favorites, t, expandedFolders, setExpandedFolders, onOpenNote, onToggleFav, onRename, onNewNote, onNewFolder, creatingFolder, newFolderName, setNewFolderName, createFolder, setCreatingFolder, dragNote, setDragNote, dragOver, setDragOver, moveNote }: {
+  folderName: string; node: FolderNode; path: string; depth: number;
+  active: Note|null; favorites: string[]; t: Theme;
+  expandedFolders: Set<string>; setExpandedFolders: (fn: (p: Set<string>) => Set<string>) => void;
+  onOpenNote: (n: Note) => void; onToggleFav: (p: string) => void;
+  onRename: (n: Note) => void; onNewNote: (path: string) => void;
+  onNewFolder: (f: string) => void; creatingFolder: string|null;
+  newFolderName: string; setNewFolderName: (v: string) => void;
+  createFolder: (parent: string, name: string) => void;
+  setCreatingFolder: (v: string|null) => void;
+  dragNote: Note|null; setDragNote: (n: Note|null) => void;
+  dragOver: string|null; setDragOver: (v: string|null) => void;
+  moveNote: (n: Note, target: string) => void;
+}) {
+  const isExpanded = expandedFolders.has(path);
+  const subfolderKeys = Object.keys(node.subfolders || {});
+  const totalNotes = node.notes.length + subfolderKeys.reduce((acc, k) => acc + node.subfolders[k].notes.length, 0);
+
+  return (
+    <div style={{marginTop: depth === 0 ? 4 : 0}}>
+      <div style={{display:"flex",alignItems:"center"}}>
+        <button
+          onClick={()=>setExpandedFolders(prev=>{const s=new Set(prev);s.has(path)?s.delete(path):s.add(path);return s;})}
+          style={{display:"flex",alignItems:"center",gap:5,flex:1,padding:`4px ${8 + depth*4}px`,background:"none",border:"none",color:t.muted,fontSize:depth===0?11:10,fontWeight:600,cursor:"pointer",borderRadius:5,textTransform:"uppercase",letterSpacing:"0.4px"}}
+          onMouseEnter={e=>(e.currentTarget.style.background=t.hoverBg)}
+          onMouseLeave={e=>(e.currentTarget.style.background="none")}>
+          {isExpanded?<ChevronDown size={10}/>:<ChevronRight size={10}/>}
+          {isExpanded?<FolderOpen size={10}/>:<Folder size={10}/>}
+          <span style={{flex:1,textAlign:"left",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{folderName}</span>
+          <span style={{fontSize:9,opacity:.5,marginLeft:4}}>{totalNotes}</span>
+        </button>
+        <button onClick={()=>onNewNote(path)} style={{padding:"2px 4px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:3,opacity:.4,fontSize:10}} title="Nouvelle note" onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".4")}><Plus size={10}/></button>
+      </div>
+
+      {isExpanded && (
+        <div
+          style={{paddingLeft: 8 + depth*4}}
+          onDragOver={e=>{e.preventDefault();setDragOver(path);}}
+          onDragLeave={()=>setDragOver(null)}
+          onDrop={e=>{e.preventDefault();if(dragNote)moveNote(dragNote,path);setDragOver(null);setDragNote(null);}}>
+          {dragOver===path && <div style={{height:2,background:t.accent,borderRadius:1,margin:"2px 0"}}/>}
+
+          {creatingFolder===path && (
+            <div style={{display:"flex",alignItems:"center",gap:4,padding:"3px 6px"}}>
+              <input value={newFolderName} onChange={e=>setNewFolderName(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter")createFolder(path,newFolderName);if(e.key==="Escape")setCreatingFolder(null);}}
+                placeholder="Nom du dossier..." autoFocus
+                style={{flex:1,background:t.inputBg,border:`1px solid ${t.accent}44`,borderRadius:4,color:t.text,fontSize:11,padding:"2px 6px",outline:"none"}}/>
+              <button onClick={()=>createFolder(path,newFolderName)} style={{padding:"2px 6px",background:t.accent,border:"none",borderRadius:4,color:"#fff",fontSize:10,cursor:"pointer"}}>✓</button>
+              <button onClick={()=>{setCreatingFolder(null);setNewFolderName("");}} style={{padding:"2px 4px",background:t.surface2,border:"none",borderRadius:4,color:t.muted,fontSize:10,cursor:"pointer"}}>✕</button>
+            </div>
+          )}
+
+          {node.notes.map(n=>(
+            <NoteRow key={n.path} note={n} active={active} favorites={favorites} t={t}
+              onToggleFav={onToggleFav} onClick={()=>onOpenNote(n)}
+              onRename={()=>onRename(n)} onDragStart={nn=>setDragNote(nn)}/>
+          ))}
+
+          {subfolderKeys.map(subKey=>(
+            <FolderTree
+              key={subKey}
+              folderName={subKey}
+              node={node.subfolders[subKey]}
+              path={`${path}/${subKey}`}
+              depth={depth+1}
+              active={active} favorites={favorites} t={t}
+              expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders}
+              onOpenNote={onOpenNote} onToggleFav={onToggleFav} onRename={onRename}
+              onNewNote={onNewNote} onNewFolder={onNewFolder}
+              creatingFolder={creatingFolder} newFolderName={newFolderName}
+              setNewFolderName={setNewFolderName} createFolder={createFolder}
+              setCreatingFolder={setCreatingFolder}
+              dragNote={dragNote} setDragNote={setDragNote}
+              dragOver={dragOver} setDragOver={setDragOver} moveNote={moveNote}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Note Row ─────────────────────────────────────────────────────────────────
 function NoteRow({ note, active, favorites, t, onToggleFav, onClick, onRename, onDragStart }: { note:Note; active:Note|null; favorites:string[]; t:Theme; onToggleFav:(p:string)=>void; onClick:()=>void; onRename:()=>void; onDragStart?:(n:Note)=>void }) {
   const isActive=active?.path===note.path, isFav=favorites.includes(note.path);
@@ -845,27 +930,33 @@ export default function Brain() {
                 )}
                 {tree.notes.map(n=><NoteRow key={n.path} note={n} active={active} favorites={favorites} t={t} onToggleFav={toggleFav} onClick={()=>openNote(n)} onRename={()=>{setRenaming(n);setRenameTo(n.name);}}/>)}
                 {folders.map(folder=>(
-                  <div key={folder} style={{marginTop:4}}>
-                    <div style={{display:"flex",alignItems:"center"}}>
-                      <button onClick={()=>setExpandedFolders(prev=>{const s=new Set(prev);s.has(folder)?s.delete(folder):s.add(folder);return s;})}
-                        style={{display:"flex",alignItems:"center",gap:6,flex:1,padding:"5px 8px",background:"none",border:"none",color:t.muted,fontSize:12,fontWeight:600,cursor:"pointer",borderRadius:6,textTransform:"uppercase",letterSpacing:"0.5px"}}
-                        onMouseEnter={e=>(e.currentTarget.style.background=t.hoverBg)} onMouseLeave={e=>(e.currentTarget.style.background="none")}>
-                        {expandedFolders.has(folder)?<ChevronDown size={12}/>:<ChevronRight size={12}/>}
-                        {expandedFolders.has(folder)?<FolderOpen size={12}/>:<Folder size={12}/>}
-                        {folder}
-                        <span style={{marginLeft:"auto",fontSize:10,opacity:.6}}>{tree.subfolders[folder].notes.length}</span>
-                      </button>
-                      <button onClick={()=>{setNewNoteFolder(`notes/${folder}`);setCreating(true);}} style={{padding:"3px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:4,opacity:.5}} title="Nouvelle note ici"
-                        onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".5")}><Plus size={11}/></button>
-                      <button onClick={()=>setCreatingFolder(folder)} style={{padding:"3px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:4,opacity:.5}} title="Nouveau sous-dossier"
-                        onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".5")}>📁</button>
-                    </div>
-                    {expandedFolders.has(folder)&&(
-                      <div style={{paddingLeft:12}}>
-                        {tree.subfolders[folder].notes.map(n=><NoteRow key={n.path} note={n} active={active} favorites={favorites} t={t} onToggleFav={toggleFav} onClick={()=>openNote(n)} onRename={()=>{setRenaming(n);setRenameTo(n.name);}}/>)}
-                      </div>
-                    )}
-                  </div>
+                  <FolderTree
+                    key={folder}
+                    folderName={folder}
+                    node={tree.subfolders[folder]}
+                    path={`notes/${folder}`}
+                    depth={0}
+                    active={active}
+                    favorites={favorites}
+                    t={t}
+                    expandedFolders={expandedFolders}
+                    setExpandedFolders={setExpandedFolders}
+                    onOpenNote={openNote}
+                    onToggleFav={toggleFav}
+                    onRename={(n)=>{setRenaming(n);setRenameTo(n.name);}}
+                    onNewNote={(path)=>{setNewNoteFolder(path);setCreating(true);}}
+                    onNewFolder={(f)=>setCreatingFolder(f)}
+                    creatingFolder={creatingFolder}
+                    newFolderName={newFolderName}
+                    setNewFolderName={setNewFolderName}
+                    createFolder={createFolder}
+                    setCreatingFolder={setCreatingFolder}
+                    dragNote={dragNote}
+                    setDragNote={setDragNote}
+                    dragOver={dragOver}
+                    setDragOver={setDragOver}
+                    moveNote={moveNote}
+                  />
                 ))}
               </>
             )}
