@@ -229,7 +229,8 @@ function DriveView({ t, password }: { t:Theme; password:string }) {
             <div style={{fontSize:12,fontWeight:600,color:t.muted,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:10}}>📄 Documents ({docs.length})</div>
             <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,overflow:"hidden"}}>
               {docs.map((f,i)=>(
-                <div key={f.path} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderBottom:i<docs.length-1?`1px solid ${t.border}`:"none"}}>
+                <div key={f.path} style={{borderBottom:i<docs.length-1?`1px solid ${t.border}`:"none"}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px"}}>
                   <div style={{color:t.muted,flexShrink:0}}>{fileIcon(f.name)}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
