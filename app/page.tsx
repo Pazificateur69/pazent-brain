@@ -229,35 +229,27 @@ function DriveView({ t, password }: { t:Theme; password:string }) {
             <div style={{fontSize:12,fontWeight:600,color:t.muted,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:10}}>📄 Documents ({docs.length})</div>
             <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,overflow:"hidden"}}>
               {docs.map((f,i)=>(
-                <div key={f.path} style={{borderBottom:i<docs.length-1?`1px solid ${t.border}`:"none"}}>
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px"}}>
+                <div key={f.path} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderBottom:i<docs.length-1?`1px solid ${t.border}`:"none"}}>
                   <div style={{color:t.muted,flexShrink:0}}>{fileIcon(f.name)}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
                     <div style={{fontSize:11,color:t.muted}}>{formatSize(f.size)} · {f.path.split("/").slice(0,-1).join("/")}</div>
                   </div>
-                  <div style={{display:"flex",gap:5,flexShrink:0}}>
+                  <div style={{display:"flex",gap:6,flexShrink:0}}>
                     <a href={f.download_url} target="_blank" rel="noopener noreferrer"
-                      style={{padding:"5px 10px",background:t.accentBg,border:`1px solid ${t.accent}33`,borderRadius:6,color:t.accent,fontSize:11,display:"flex",alignItems:"center",gap:4,textDecoration:"none"}}>
-                      <Eye size={11}/> Voir
+                      style={{padding:"6px 10px",background:t.accentBg,border:`1px solid ${t.accent}33`,borderRadius:7,color:t.accent,fontSize:12,display:"flex",alignItems:"center",gap:5,textDecoration:"none"}}>
+                      <Eye size={12}/> Voir
                     </a>
-                    <a href={f.download_url} download style={{padding:"5px 10px",background:t.surface2,border:`1px solid ${t.border}`,borderRadius:6,color:t.text,fontSize:11,display:"flex",alignItems:"center",gap:4,textDecoration:"none"}}>
-                      <Download size={11}/> DL
+                    <a href={f.download_url} download style={{padding:"6px 10px",background:t.surface2,border:`1px solid ${t.border}`,borderRadius:7,color:t.text,fontSize:12,display:"flex",alignItems:"center",gap:5,textDecoration:"none"}}>
+                      <Download size={12}/> DL
                     </a>
-                    <button onClick={()=>deleteFile(f)} style={{padding:"5px 7px",background:"none",border:`1px solid ${t.border}`,borderRadius:6,color:t.muted,cursor:"pointer"}}
+                    <button onClick={()=>deleteFile(f)} style={{padding:"6px 8px",background:"none",border:`1px solid ${t.border}`,borderRadius:7,color:t.muted,cursor:"pointer"}}
                       onMouseEnter={e=>{e.currentTarget.style.color="#ff4444";e.currentTarget.style.borderColor="#ff444444";}}
                       onMouseLeave={e=>{e.currentTarget.style.color=t.muted;e.currentTarget.style.borderColor=t.border;}}>
-                      <Trash2 size={11}/>
+                      <Trash2 size={12}/>
                     </button>
                   </div>
                 </div>
-                {(f.name.toLowerCase().endsWith('.pdf')) && (
-                  <div style={{padding:"0 16px 12px",borderBottom:`1px solid ${t.border}`}}>
-                    <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(f.download_url)}&embedded=true`}
-                      style={{width:"100%",height:280,border:`1px solid ${t.border}`,borderRadius:8}}
-                      title={f.name} />
-                  </div>
-                )}
               ))}
             </div>
           </div>
