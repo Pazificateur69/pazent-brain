@@ -251,7 +251,7 @@ function DriveView({ t, password }: { t:Theme; password:string }) {
                   </div>
                 </div>
                 {(f.name.toLowerCase().endsWith('.pdf')) && (
-                  <div style={{padding:"0 16px 12px",borderBottom:"1px solid var(--border)"}}>
+                  <div style={{padding:"0 16px 12px",borderBottom:`1px solid ${t.border}`}}>
                     <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(f.download_url)}&embedded=true`}
                       style={{width:"100%",height:280,border:`1px solid ${t.border}`,borderRadius:8}}
                       title={f.name} />
