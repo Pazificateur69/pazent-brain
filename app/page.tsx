@@ -115,6 +115,26 @@ function markdownToHtml(md: string, title: string, dark: boolean) {
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 function AuthScreen({ onAuth }: { onAuth:(p:string)=>void }) {
   const [pw,setPw]=useState("");
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  async function tryAuth() {
+    if (!pw.trim()) return;
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/auth-check", { headers: { "x-app-password": pw.trim() } });
+      if (res.ok) {
+        onAuth(pw.trim());
+      } else {
+        setErr("Mot de passe incorrect");
+        setPw("");
+      }
+    } catch {
+      setErr("Erreur réseau, réessaie");
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",padding:20,position:"relative",overflow:"hidden"}}>
       <div style={{width:"100%",maxWidth:420,position:"relative",zIndex:2}}>
@@ -130,9 +150,15 @@ function AuthScreen({ onAuth }: { onAuth:(p:string)=>void }) {
             <Lock size={16} color="#a78bfa"/>
             <span style={{fontSize:14,fontWeight:600,color:"#e6edf3",letterSpacing:".3px"}}>Accès protégé</span>
           </div>
-          <input type="password" placeholder="Mot de passe" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAuth(pw)}
-            style={{width:"100%",padding:"14px 16px",background:"rgba(13,17,23,.7)",border:"1px solid #30363d",borderRadius:12,color:"#e6edf3",fontSize:15,marginBottom:14}} autoFocus/>
-          <button onClick={()=>onAuth(pw)} style={{width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#6e00ff,#a855f7)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 10px 24px rgba(110,0,255,.4)",letterSpacing:".3px"}}>Entrer →</button>
+          <input type="password" placeholder="Mot de passe" value={pw}
+            onChange={e=>{setPw(e.target.value);setErr("");}}
+            onKeyDown={e=>e.key==="Enter"&&tryAuth()}
+            disabled={loading}
+            style={{width:"100%",padding:"14px 16px",background:"rgba(13,17,23,.7)",border:`1px solid ${err?"#ef4444":"#30363d"}`,borderRadius:12,color:"#e6edf3",fontSize:15,marginBottom:err?6:14}} autoFocus/>
+          {err&&<div style={{color:"#ef4444",fontSize:13,marginBottom:12,textAlign:"center"}}>{err}</div>}
+          <button onClick={tryAuth} disabled={loading||!pw.trim()} style={{width:"100%",padding:"14px 16px",background:loading?"#444":"linear-gradient(135deg,#6e00ff,#a855f7)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:700,cursor:loading?"default":"pointer",boxShadow:loading?"none":"0 10px 24px rgba(110,0,255,.4)",letterSpacing:".3px",opacity:!pw.trim()?.5:1}}>
+            {loading?"Vérification...":"Entrer →"}
+          </button>
         </div>
         <div style={{textAlign:"center",fontSize:12,color:"#6b7280",marginTop:18}}>
           v8 · {new Date().getFullYear()} Alessandro Gagliardi
@@ -599,7 +625,13 @@ export default function Brain() {
 
   useEffect(()=>{
     const s=sessionStorage.getItem(PASSWORD_KEY);
-    if(s){setPassword(s);setAuthed(true);}
+    if(s){
+      // Validate the stored password before assuming auth
+      fetch("/api/auth-check",{headers:{"x-app-password":s.trim()}}).then(r=>{
+        if(r.ok){setPassword(s.trim());setAuthed(true);}
+        else{sessionStorage.removeItem(PASSWORD_KEY);}
+      }).catch(()=>{sessionStorage.removeItem(PASSWORD_KEY);});
+    }
     try{const f=localStorage.getItem(FAVS_KEY);if(f)setFavorites(JSON.parse(f));}catch{}
     // Register PWA service worker
     if ('serviceWorker' in navigator) {
