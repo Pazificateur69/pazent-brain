@@ -7,7 +7,7 @@ import {
   Bold, Italic, Link2, X, Check, Star, RefreshCw, Columns, Maximize2,
   Minimize2, History, Tag, List as ListIcon, Keyboard, Lock, BarChart2,
   Zap, RotateCcw, Upload, File, Image as ImageIcon, FileArchive, Menu,
-  ArrowLeft, HardDrive, StickyNote, Settings
+  ArrowLeft, HardDrive, StickyNote, Settings, Share2, Copy
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -271,50 +271,52 @@ function Dashboard({ notes, favorites, t, onOpenNote }: { notes:Note[]; favorite
   const allTags=[...new Set(notes.flatMap(n=>extractTags(n.content||"")))];
   const favNotes=notes.filter(n=>favorites.includes(n.path));
   return (
-    <div style={{flex:1,overflowY:"auto",padding:"24px 20px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{marginBottom:24}}>
-          <div style={{fontSize:24,fontWeight:700,color:t.text,marginBottom:4}}>Bonjour AL 👋</div>
-          <div style={{fontSize:13,color:t.muted}}>{new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
+    <div style={{flex:1,overflowY:"auto",padding:"36px 28px"}}>
+      <div style={{maxWidth:980,margin:"0 auto"}}>
+        <div style={{marginBottom:32}}>
+          <div style={{fontSize:32,fontWeight:800,color:t.text,marginBottom:6,letterSpacing:"-0.5px",background:`linear-gradient(135deg,${t.text},${t.accent})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bonjour AL 👋</div>
+          <div style={{fontSize:15,color:t.muted}}>{new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:24}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:28}}>
           {[{label:"Notes",value:notes.length,icon:"📄"},{label:"Mots",value:totalWords.toLocaleString(),icon:"✍️"},{label:"Tags",value:allTags.length,icon:"🏷️"},{label:"Favoris",value:favNotes.length,icon:"⭐"}].map(s=>(
-            <div key={s.label} style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,padding:16,textAlign:"center"}}>
-              <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
-              <div style={{fontSize:20,fontWeight:700,color:t.text}}>{s.value}</div>
-              <div style={{fontSize:12,color:t.muted}}>{s.label}</div>
+            <div key={s.label} style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:22,textAlign:"center",transition:"transform .2s, border-color .2s",cursor:"default"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=t.accent+"66";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=t.border;}}>
+              <div style={{fontSize:30,marginBottom:8}}>{s.icon}</div>
+              <div style={{fontSize:26,fontWeight:800,color:t.text,letterSpacing:"-0.3px"}}>{s.value}</div>
+              <div style={{fontSize:13,color:t.muted,marginTop:2}}>{s.label}</div>
             </div>
           ))}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:14,marginBottom:16}}>
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,padding:16}}>
-            <div style={{fontSize:12,fontWeight:600,color:t.muted,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:12}}>📝 Notes récentes</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16,marginBottom:18}}>
+          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+            <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:14}}>📝 Notes récentes</div>
             {notes.slice(0,5).map(n=>(
-              <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}22`,cursor:"pointer",textAlign:"left"}}>
-                <FileText size={12} color={t.muted}/>
-                <span style={{fontSize:13,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{n.path.split("/").pop()?.replace(".md","")}</span>
-                <span style={{fontSize:11,color:t.muted,flexShrink:0}}>{n.path.includes("/")?n.path.split("/").slice(-2,-1)[0]:""}</span>
+              <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}33`,cursor:"pointer",textAlign:"left"}}>
+                <FileText size={14} color={t.muted}/>
+                <span style={{fontSize:14,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{n.path.split("/").pop()?.replace(".md","")}</span>
+                <span style={{fontSize:12,color:t.muted,flexShrink:0}}>{n.path.includes("/")?n.path.split("/").slice(-2,-1)[0]:""}</span>
               </button>
             ))}
-            {notes.length===0&&<div style={{fontSize:13,color:t.muted}}>Aucune note</div>}
+            {notes.length===0&&<div style={{fontSize:14,color:t.muted,padding:"6px 0"}}>Aucune note</div>}
           </div>
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,padding:16}}>
-            <div style={{fontSize:12,fontWeight:600,color:t.muted,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:12}}>⭐ Favoris</div>
+          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+            <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:14}}>⭐ Favoris</div>
             {favNotes.slice(0,5).map(n=>(
-              <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"6px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}22`,cursor:"pointer",textAlign:"left"}}>
-                <Star size={12} color="#f0b429" fill="#f0b429"/>
-                <span style={{fontSize:13,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.path.split("/").pop()?.replace(".md","")}</span>
+              <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}33`,cursor:"pointer",textAlign:"left"}}>
+                <Star size={14} color="#f0b429" fill="#f0b429"/>
+                <span style={{fontSize:14,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.path.split("/").pop()?.replace(".md","")}</span>
               </button>
             ))}
-            {favNotes.length===0&&<div style={{fontSize:13,color:t.muted}}>Aucun favori encore</div>}
+            {favNotes.length===0&&<div style={{fontSize:14,color:t.muted,padding:"6px 0"}}>Aucun favori encore</div>}
           </div>
         </div>
         {allTags.length>0&&(
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:12,padding:16}}>
-            <div style={{fontSize:12,fontWeight:600,color:t.muted,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:10}}>🏷️ Tags</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+            <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:12}}>🏷️ Tags</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
               {allTags.map(tag=>(
-                <span key={tag} style={{padding:"3px 10px",borderRadius:20,fontSize:12,background:t.accentBg,color:t.accent,border:`1px solid ${t.accent}33`}}>#{tag}</span>
+                <span key={tag} style={{padding:"5px 13px",borderRadius:999,fontSize:13,background:t.accentBg,color:t.accent,border:`1px solid ${t.accent}44`,fontWeight:500}}>#{tag}</span>
               ))}
             </div>
           </div>
@@ -421,13 +423,15 @@ function QuickCapture({ t, folders, password, onCreated, onClose }: { t:Theme; f
 
 
 // ─── FolderTree — Recursive folder component ─────────────────────────────────
-function FolderTree({ folderName, node, path, depth, active, favorites, t, expandedFolders, setExpandedFolders, onOpenNote, onToggleFav, onRename, onNewNote, onNewFolder, creatingFolder, newFolderName, setNewFolderName, createFolder, setCreatingFolder, dragNote, setDragNote, dragOver, setDragOver, moveNote }: {
+function FolderTree({ folderName, node, path, depth, active, favorites, t, expandedFolders, setExpandedFolders, onOpenNote, onToggleFav, onRename, onNewNote, onNewFolder, onShareFolder, creatingFolder, newFolderName, setNewFolderName, createFolder, setCreatingFolder, dragNote, setDragNote, dragOver, setDragOver, moveNote }: {
   folderName: string; node: FolderNode; path: string; depth: number;
   active: Note|null; favorites: string[]; t: Theme;
   expandedFolders: Set<string>; setExpandedFolders: (fn: (p: Set<string>) => Set<string>) => void;
   onOpenNote: (n: Note) => void; onToggleFav: (p: string) => void;
   onRename: (n: Note) => void; onNewNote: (path: string) => void;
-  onNewFolder: (f: string) => void; creatingFolder: string|null;
+  onNewFolder: (f: string) => void;
+  onShareFolder: (path: string) => void;
+  creatingFolder: string|null;
   newFolderName: string; setNewFolderName: (v: string) => void;
   createFolder: (parent: string, name: string) => void;
   setCreatingFolder: (v: string|null) => void;
@@ -441,18 +445,19 @@ function FolderTree({ folderName, node, path, depth, active, favorites, t, expan
 
   return (
     <div style={{marginTop: depth === 0 ? 4 : 0}}>
-      <div style={{display:"flex",alignItems:"center"}}>
+      <div style={{display:"flex",alignItems:"center",gap:2}} className="folder-row">
         <button
           onClick={()=>setExpandedFolders(prev=>{const s=new Set(prev);s.has(path)?s.delete(path):s.add(path);return s;})}
-          style={{display:"flex",alignItems:"center",gap:5,flex:1,padding:`4px ${8 + depth*4}px`,background:"none",border:"none",color:t.muted,fontSize:depth===0?11:10,fontWeight:600,cursor:"pointer",borderRadius:5,textTransform:"uppercase",letterSpacing:"0.4px"}}
+          style={{display:"flex",alignItems:"center",gap:7,flex:1,padding:`6px ${10 + depth*6}px`,background:"none",border:"none",color:depth===0?t.text:t.muted,fontSize:depth===0?12:11,fontWeight:600,cursor:"pointer",borderRadius:7,textTransform:"uppercase",letterSpacing:"0.5px",transition:"background .12s"}}
           onMouseEnter={e=>(e.currentTarget.style.background=t.hoverBg)}
           onMouseLeave={e=>(e.currentTarget.style.background="none")}>
-          {isExpanded?<ChevronDown size={10}/>:<ChevronRight size={10}/>}
-          {isExpanded?<FolderOpen size={10}/>:<Folder size={10}/>}
+          {isExpanded?<ChevronDown size={13}/>:<ChevronRight size={13}/>}
+          {isExpanded?<FolderOpen size={13}/>:<Folder size={13}/>}
           <span style={{flex:1,textAlign:"left",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{folderName}</span>
-          <span style={{fontSize:9,opacity:.5,marginLeft:4}}>{totalNotes}</span>
+          <span style={{fontSize:10,opacity:.6,marginLeft:4,padding:"1px 7px",borderRadius:999,background:t.surface2}}>{totalNotes}</span>
         </button>
-        <button onClick={()=>onNewNote(path)} style={{padding:"2px 4px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:3,opacity:.4,fontSize:10}} title="Nouvelle note" onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".4")}><Plus size={10}/></button>
+        <button onClick={()=>onShareFolder(path)} className="folder-action" style={{padding:"4px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:5,opacity:.45,fontSize:11}} title="Partager le dossier" onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".45")}><Share2 size={13}/></button>
+        <button onClick={()=>onNewNote(path)} className="folder-action" style={{padding:"4px 5px",background:"none",border:"none",color:t.muted,cursor:"pointer",borderRadius:5,opacity:.45,fontSize:11}} title="Nouvelle note" onMouseEnter={e=>(e.currentTarget.style.opacity="1")} onMouseLeave={e=>(e.currentTarget.style.opacity=".45")}><Plus size={13}/></button>
       </div>
 
       {isExpanded && (
@@ -491,6 +496,7 @@ function FolderTree({ folderName, node, path, depth, active, favorites, t, expan
               expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders}
               onOpenNote={onOpenNote} onToggleFav={onToggleFav} onRename={onRename}
               onNewNote={onNewNote} onNewFolder={onNewFolder}
+              onShareFolder={onShareFolder}
               creatingFolder={creatingFolder} newFolderName={newFolderName}
               setNewFolderName={setNewFolderName} createFolder={createFolder}
               setCreatingFolder={setCreatingFolder}
@@ -510,13 +516,13 @@ function NoteRow({ note, active, favorites, t, onToggleFav, onClick, onRename, o
   const [hov,setHov]=useState(false);
   const name=note.path.split("/").pop()?.replace(".md","")||note.name;
   return (
-    <div style={{display:"flex",alignItems:"center",marginBottom:1}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
-      <button onClick={onClick} style={{display:"flex",alignItems:"center",gap:7,flex:1,padding:"6px 8px",background:isActive?t.accentBg:"none",border:`1px solid ${isActive?t.accent+"33":"transparent"}`,borderRadius:8,color:isActive?"#a78bfa":t.text,fontSize:13,cursor:"pointer",textAlign:"left",minWidth:0}}
+    <div style={{display:"flex",alignItems:"center",marginBottom:2}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
+      <button onClick={onClick} style={{display:"flex",alignItems:"center",gap:9,flex:1,padding:"8px 10px",background:isActive?t.accentBg:"none",border:`1px solid ${isActive?t.accent+"55":"transparent"}`,borderRadius:9,color:isActive?"#a78bfa":t.text,fontSize:14,cursor:"pointer",textAlign:"left",minWidth:0,fontWeight:isActive?600:500}}
         onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background=t.hoverBg;}} onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background="none";}}>
-        <FileText size={12} color={isActive?t.accent:t.muted} style={{flexShrink:0}}/>
+        <FileText size={14} color={isActive?t.accent:t.muted} style={{flexShrink:0}}/>
         <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{name}</span>
       </button>
-      {(hov||isFav)&&<button onClick={e=>{e.stopPropagation();onToggleFav(note.path);}} style={{padding:"4px 5px",background:"none",border:"none",cursor:"pointer",color:isFav?"#f0b429":t.muted,flexShrink:0}}><Star size={11} fill={isFav?"#f0b429":"none"}/></button>}
+      {(hov||isFav)&&<button onClick={e=>{e.stopPropagation();onToggleFav(note.path);}} style={{padding:"5px 6px",background:"none",border:"none",cursor:"pointer",color:isFav?"#f0b429":t.muted,flexShrink:0}}><Star size={13} fill={isFav?"#f0b429":"none"}/></button>}
     </div>
   );
 }
@@ -559,6 +565,7 @@ export default function Brain() {
   const [showShare,setShowShare]=useState(false);
   const [shareUrl,setShareUrl]=useState<string|null>(null);
   const [sharing,setSharing]=useState(false);
+  const [shareToast,setShareToast]=useState<{kind:"loading"|"success"|"error"; msg:string; url?:string}|null>(null);
   const [showCommandPalette,setShowCommandPalette]=useState(false);
   const [pasteUploading,setPasteUploading]=useState(false);
   const [wordWrap,setWordWrap]=useState(true);
@@ -613,6 +620,12 @@ export default function Brain() {
   },[]);
 
   useEffect(()=>{if(authed){fetchNotes();fetchTrash();}},[authed,fetchNotes,fetchTrash]);
+
+  useEffect(()=>{
+    if(!shareToast||shareToast.kind==="loading")return;
+    const id=setTimeout(()=>setShareToast(null), shareToast.kind==="success"?6000:4000);
+    return ()=>clearTimeout(id);
+  },[shareToast]);
 
   function handleAuth(pw:string){sessionStorage.setItem(PASSWORD_KEY,pw);setPassword(pw);setAuthed(true);}
   function toggleTheme(){const n=!darkMode;setDarkMode(n);localStorage.setItem(THEME_KEY,n?"dark":"light");}
@@ -762,6 +775,28 @@ export default function Brain() {
     setExpandedFolders(prev => new Set([...prev, name]));
   }
 
+  async function shareFolder(folderPath: string) {
+    const name = folderPath.split("/").pop() || "Dossier";
+    setShareToast({ kind: "loading", msg: `Partage du dossier "${name}"...` });
+    try {
+      const res = await fetch("/api/share-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-app-password": password },
+        body: JSON.stringify({ folderPath, title: name }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setShareToast({ kind: "error", msg: data.error || "Erreur lors du partage" });
+        return;
+      }
+      const fullUrl = `${window.location.origin}${data.url}`;
+      try { await navigator.clipboard.writeText(fullUrl); } catch { /* clipboard may be blocked */ }
+      setShareToast({ kind: "success", msg: `🔗 Lien copié — ${data.count} note${data.count > 1 ? "s" : ""} partagée${data.count > 1 ? "s" : ""}`, url: fullUrl });
+    } catch (e) {
+      setShareToast({ kind: "error", msg: "Erreur réseau: " + String(e) });
+    }
+  }
+
   async function doSearch(query:string){
     if(!query.trim()){setSearchResults(null);return;}
     const results:{note:Note;excerpt:string}[]=[];
@@ -824,46 +859,46 @@ export default function Brain() {
 
       {/* ── Sidebar ── */}
       <aside style={{
-        width:260,minWidth:260,background:t.bg,borderRight:`1px solid ${t.border}`,
+        width:286,minWidth:286,background:t.bg,borderRight:`1px solid ${t.border}`,
         display:"flex",flexDirection:"column",overflow:"hidden",
         position:isMobile?"fixed":"relative",
-        left:isMobile?(sidebarOpen?0:-260):"auto",
+        left:isMobile?(sidebarOpen?0:-286):"auto",
         top:isMobile?0:"auto",height:isMobile?"100vh":"auto",
         zIndex:isMobile?50:1,
         transition:"left .25s ease",
         boxShadow:isMobile&&sidebarOpen?`4px 0 20px ${t.shadowColor}`:"none"
       }}>
         {/* Logo */}
-        <div style={{padding:"14px 16px 12px",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🧠</div>
-            <div><div style={{fontWeight:700,fontSize:14,color:t.text,letterSpacing:"-0.3px"}}>pazent.brain</div><div style={{fontSize:11,color:t.muted}}>{notes.length} notes</div></div>
-            <div style={{marginLeft:"auto",display:"flex",gap:2}}>
-              <button onClick={toggleTheme} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:4,borderRadius:4}}>{darkMode?"☀️":"🌙"}</button>
-              <button onClick={fetchNotes} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:4,borderRadius:4}}><RefreshCw size={12}/></button>
+        <div style={{padding:"18px 18px 14px",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div className="brain-logo" style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,boxShadow:"0 6px 22px rgba(110,0,255,.4)"}}>🧠</div>
+            <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:16,color:t.text,letterSpacing:"-0.4px"}}>pazent.brain</div><div style={{fontSize:12,color:t.muted}}>{notes.length} note{notes.length>1?"s":""}</div></div>
+            <div style={{display:"flex",gap:2}}>
+              <button onClick={toggleTheme} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:6,borderRadius:6,fontSize:14}} title={darkMode?"Mode clair":"Mode sombre"}>{darkMode?"☀️":"🌙"}</button>
+              <button onClick={fetchNotes} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:6,borderRadius:6}} title="Rafraîchir"><RefreshCw size={14}/></button>
             </div>
           </div>
         </div>
 
         {/* Nav tabs */}
-        <div style={{display:"flex",padding:"8px 10px",gap:4,borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
+        <div style={{display:"flex",padding:"10px 12px",gap:5,borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
           {([["dashboard","📊","Dashboard"],["notes","📝","Notes"],["drive","📁","Drive"],["trash","🗑️","Corbeille"]] as const).map(([v,icon,label])=>(
             <button key={v} onClick={()=>{setView(v);if(isMobile)setSidebarOpen(false);}}
-              style={{flex:1,padding:"6px 4px",background:view===v?t.accentBg:"none",border:`1px solid ${view===v?t.accent+"44":t.border}`,borderRadius:7,color:view===v?t.accent:t.muted,fontSize:11,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-              <span style={{fontSize:14}}>{icon}</span><span>{label}</span>
+              style={{flex:1,padding:"8px 4px",background:view===v?t.accentBg:"none",border:`1px solid ${view===v?t.accent+"55":t.border}`,borderRadius:9,color:view===v?t.accent:t.muted,fontSize:12,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+              <span style={{fontSize:16}}>{icon}</span><span>{label}</span>
             </button>
           ))}
         </div>
 
         {/* Search (notes only) */}
         {view==="notes"&&(
-          <div style={{padding:"8px 12px 4px",flexShrink:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:t.inputBg,border:`1px solid ${t.border}`,borderRadius:8}}>
-              <Search size={13} color={t.muted}/>
+          <div style={{padding:"12px 14px 6px",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:9,padding:"9px 12px",background:t.inputBg,border:`1px solid ${t.border}`,borderRadius:10}}>
+              <Search size={15} color={t.muted}/>
               <input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doSearch(search)}
                 placeholder="Chercher (Entrée=full text)"
-                style={{background:"none",border:"none",outline:"none",color:t.text,fontSize:13,width:"100%"}}/>
-              {search&&<button onClick={()=>{setSearch("");setSearchResults(null);}} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:0}}><X size={12}/></button>}
+                style={{background:"none",border:"none",outline:"none",color:t.text,fontSize:14,width:"100%"}}/>
+              {search&&<button onClick={()=>{setSearch("");setSearchResults(null);}} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:0}}><X size={14}/></button>}
             </div>
           </div>
         )}
@@ -950,6 +985,7 @@ export default function Brain() {
                     onRename={(n)=>{setRenaming(n);setRenameTo(n.name);}}
                     onNewNote={(path)=>{setNewNoteFolder(path);setCreating(true);}}
                     onNewFolder={(f)=>setCreatingFolder(f)}
+                    onShareFolder={shareFolder}
                     creatingFolder={creatingFolder}
                     newFolderName={newFolderName}
                     setNewFolderName={setNewFolderName}
@@ -969,12 +1005,12 @@ export default function Brain() {
 
         {/* Tags (notes only) */}
         {view==="notes"&&allTags.length>0&&(
-          <div style={{padding:"8px 12px",borderTop:`1px solid ${t.border}`,flexShrink:0}}>
-            <div style={{fontSize:11,color:t.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6,display:"flex",alignItems:"center",gap:6}}><Tag size={11}/> Tags</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+          <div style={{padding:"12px 14px",borderTop:`1px solid ${t.border}`,flexShrink:0}}>
+            <div style={{fontSize:12,color:t.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:8,display:"flex",alignItems:"center",gap:6}}><Tag size={12}/> Tags</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
               {allTags.map(tag=>(
                 <button key={tag} onClick={()=>setActiveTag(activeTag===tag?null:tag)}
-                  style={{padding:"2px 8px",borderRadius:20,fontSize:11,cursor:"pointer",border:"none",background:activeTag===tag?t.accent:t.surface2,color:activeTag===tag?"#fff":t.muted}}>
+                  style={{padding:"3px 10px",borderRadius:999,fontSize:12,cursor:"pointer",border:"none",background:activeTag===tag?t.accent:t.surface2,color:activeTag===tag?"#fff":t.muted,fontWeight:500}}>
                   #{tag}
                 </button>
               ))}
@@ -983,9 +1019,9 @@ export default function Brain() {
         )}
 
         {/* Footer */}
-        <div style={{padding:"6px 12px",borderTop:`1px solid ${t.border}`,fontSize:11,color:t.muted,display:"flex",alignItems:"center",gap:6,cursor:"pointer",flexShrink:0}} onClick={()=>setShowShortcuts(true)}>
-          <Keyboard size={11}/> <span>Raccourcis</span>
-          <kbd style={{marginLeft:"auto",background:t.surface2,border:`1px solid ${t.border}`,borderRadius:3,padding:"1px 5px",fontSize:10}}>?</kbd>
+        <div style={{padding:"10px 14px",borderTop:`1px solid ${t.border}`,fontSize:12,color:t.muted,display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0}} onClick={()=>setShowShortcuts(true)}>
+          <Keyboard size={13}/> <span>Raccourcis</span>
+          <kbd style={{marginLeft:"auto",background:t.surface2,border:`1px solid ${t.border}`,borderRadius:5,padding:"2px 7px",fontSize:11}}>?</kbd>
         </div>
       </aside>
 
@@ -1302,6 +1338,24 @@ export default function Brain() {
       )}
 
       {showDownload&&<div onClick={()=>setShowDownload(false)} style={{position:"fixed",inset:0,zIndex:50}}/>}
+
+      {shareToast&&(
+        <div className="share-toast" style={{position:"fixed",bottom:24,right:24,zIndex:2000,maxWidth:380,padding:"14px 16px",borderRadius:14,background:t.surface,border:`1px solid ${shareToast.kind==="error"?"#ff6b6b55":shareToast.kind==="success"?"#22c55e55":t.border}`,boxShadow:`0 14px 40px ${t.shadowColor}`,backdropFilter:"blur(10px)",animation:"toastIn .25s ease"}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+            <div style={{fontSize:22,flexShrink:0,marginTop:-2}}>{shareToast.kind==="success"?"🔗":shareToast.kind==="error"?"⚠️":"⏳"}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:600,fontSize:14,color:t.text,marginBottom:shareToast.url?6:0}}>{shareToast.msg}</div>
+              {shareToast.url&&(
+                <div style={{display:"flex",gap:6,alignItems:"center",marginTop:6}}>
+                  <a href={shareToast.url} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:12,color:t.accent,textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontFamily:"'JetBrains Mono',monospace"}}>{shareToast.url}</a>
+                  <button onClick={()=>{navigator.clipboard.writeText(shareToast.url!);}} style={{padding:"4px 8px",background:t.accent,border:"none",borderRadius:6,color:"#fff",fontSize:11,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:4}}><Copy size={11}/>Copier</button>
+                </div>
+              )}
+            </div>
+            <button onClick={()=>setShareToast(null)} style={{background:"none",border:"none",color:t.muted,cursor:"pointer",padding:2,flexShrink:0}}><X size={14}/></button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
