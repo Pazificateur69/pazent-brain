@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkAuth } from "../../../lib/auth";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
 const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
@@ -43,7 +44,7 @@ async function collectNotes(folder: string): Promise<NoteEntry[]> {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
+  if (!checkAuth(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { folderPath, title } = await req.json();
@@ -102,7 +103,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
+  if (!checkAuth(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { shareId } = await req.json();
