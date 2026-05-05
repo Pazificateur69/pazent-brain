@@ -116,17 +116,26 @@ function markdownToHtml(md: string, title: string, dark: boolean) {
 function AuthScreen({ onAuth }: { onAuth:(p:string)=>void }) {
   const [pw,setPw]=useState("");
   return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"#0d1117",padding:16}}>
-      <div style={{width:"100%",maxWidth:360}}>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:32}}>
-          <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>🧠</div>
-          <div><div style={{fontWeight:700,fontSize:22,color:"#fff"}}>pazent.brain</div><div style={{fontSize:12,color:"#8b949e"}}>knowledge base privée</div></div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",padding:20,position:"relative",overflow:"hidden"}}>
+      <div style={{width:"100%",maxWidth:420,position:"relative",zIndex:2}}>
+        <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:36,justifyContent:"center"}}>
+          <div className="brain-logo" style={{width:56,height:56,borderRadius:16,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>🧠</div>
+          <div>
+            <div style={{fontWeight:800,fontSize:28,letterSpacing:"-0.6px",background:"linear-gradient(135deg,#fff,#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>pazent.brain</div>
+            <div style={{fontSize:13,color:"#8b949e",marginTop:2}}>knowledge base privée</div>
+          </div>
         </div>
-        <div style={{background:"#161b22",border:"1px solid #21262d",borderRadius:14,padding:24}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><Lock size={15} color="#6e00ff"/><span style={{fontSize:14,fontWeight:500,color:"#e6edf3"}}>Accès protégé</span></div>
+        <div className="glass" style={{borderRadius:20,padding:32,boxShadow:"0 24px 60px rgba(0,0,0,.45)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20,justifyContent:"center"}}>
+            <Lock size={16} color="#a78bfa"/>
+            <span style={{fontSize:14,fontWeight:600,color:"#e6edf3",letterSpacing:".3px"}}>Accès protégé</span>
+          </div>
           <input type="password" placeholder="Mot de passe" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onAuth(pw)}
-            style={{width:"100%",padding:"12px 14px",background:"#0d1117",border:"1px solid #21262d",borderRadius:10,color:"#e6edf3",fontSize:15,outline:"none",marginBottom:12}} autoFocus/>
-          <button onClick={()=>onAuth(pw)} style={{width:"100%",padding:"12px 14px",background:"linear-gradient(135deg,#6e00ff,#5500cc)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer"}}>Entrer →</button>
+            style={{width:"100%",padding:"14px 16px",background:"rgba(13,17,23,.7)",border:"1px solid #30363d",borderRadius:12,color:"#e6edf3",fontSize:15,marginBottom:14}} autoFocus/>
+          <button onClick={()=>onAuth(pw)} style={{width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#6e00ff,#a855f7)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 10px 24px rgba(110,0,255,.4)",letterSpacing:".3px"}}>Entrer →</button>
+        </div>
+        <div style={{textAlign:"center",fontSize:12,color:"#6b7280",marginTop:18}}>
+          v8 · {new Date().getFullYear()} Alessandro Gagliardi
         </div>
       </div>
     </div>
@@ -279,9 +288,7 @@ function Dashboard({ notes, favorites, t, onOpenNote }: { notes:Note[]; favorite
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:28}}>
           {[{label:"Notes",value:notes.length,icon:"📄"},{label:"Mots",value:totalWords.toLocaleString(),icon:"✍️"},{label:"Tags",value:allTags.length,icon:"🏷️"},{label:"Favoris",value:favNotes.length,icon:"⭐"}].map(s=>(
-            <div key={s.label} style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:22,textAlign:"center",transition:"transform .2s, border-color .2s",cursor:"default"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=t.accent+"66";}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.borderColor=t.border;}}>
+            <div key={s.label} className="lift glass" style={{borderRadius:18,padding:22,textAlign:"center",cursor:"default"}}>
               <div style={{fontSize:30,marginBottom:8}}>{s.icon}</div>
               <div style={{fontSize:26,fontWeight:800,color:t.text,letterSpacing:"-0.3px"}}>{s.value}</div>
               <div style={{fontSize:13,color:t.muted,marginTop:2}}>{s.label}</div>
@@ -289,7 +296,7 @@ function Dashboard({ notes, favorites, t, onOpenNote }: { notes:Note[]; favorite
           ))}
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16,marginBottom:18}}>
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+          <div className="glass" style={{borderRadius:18,padding:22}}>
             <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:14}}>📝 Notes récentes</div>
             {notes.slice(0,5).map(n=>(
               <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}33`,cursor:"pointer",textAlign:"left"}}>
@@ -300,7 +307,7 @@ function Dashboard({ notes, favorites, t, onOpenNote }: { notes:Note[]; favorite
             ))}
             {notes.length===0&&<div style={{fontSize:14,color:t.muted,padding:"6px 0"}}>Aucune note</div>}
           </div>
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+          <div className="glass" style={{borderRadius:18,padding:22}}>
             <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:14}}>⭐ Favoris</div>
             {favNotes.slice(0,5).map(n=>(
               <button key={n.path} onClick={()=>onOpenNote(n)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 0",background:"none",border:"none",borderBottom:`1px solid ${t.border}33`,cursor:"pointer",textAlign:"left"}}>
@@ -312,7 +319,7 @@ function Dashboard({ notes, favorites, t, onOpenNote }: { notes:Note[]; favorite
           </div>
         </div>
         {allTags.length>0&&(
-          <div style={{background:t.surface,border:`1px solid ${t.border}`,borderRadius:16,padding:20}}>
+          <div className="glass" style={{borderRadius:18,padding:22,marginTop:0}}>
             <div style={{fontSize:13,fontWeight:700,color:t.muted,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:12}}>🏷️ Tags</div>
             <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
               {allTags.map(tag=>(
@@ -852,30 +859,40 @@ export default function Brain() {
   const displayNotes=searchResults!==null?searchResults.map(r=>r.note):activeTag?notes.filter(n=>extractTags(n.content||"").includes(activeTag)):null;
 
   return (
-    <div className={darkMode?"":"light"} style={{display:"flex",height:"100vh",background:t.bg,color:t.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",position:"relative"}}>
+    <div className={darkMode?"":"light"} style={{display:"flex",height:"100vh",background:"transparent",color:t.text,fontFamily:"'Inter',sans-serif",overflow:"hidden",position:"relative"}}>
 
       {/* Mobile overlay */}
       {isMobile&&sidebarOpen&&<div style={{position:"fixed",inset:0,background:"#00000066",zIndex:40}} onClick={()=>setSidebarOpen(false)}/>}
 
       {/* ── Sidebar ── */}
-      <aside style={{
-        width:286,minWidth:286,background:t.bg,borderRight:`1px solid ${t.border}`,
+      <aside className="glass" style={{
+        width:296,minWidth:296,
+        borderRight:`1px solid ${t.border}`,
+        background: darkMode? "rgba(13,17,23,.6)" : "rgba(255,255,255,.7)",
+        backdropFilter: "blur(16px) saturate(140%)",
+        WebkitBackdropFilter: "blur(16px) saturate(140%)",
         display:"flex",flexDirection:"column",overflow:"hidden",
         position:isMobile?"fixed":"relative",
-        left:isMobile?(sidebarOpen?0:-286):"auto",
+        left:isMobile?(sidebarOpen?0:-296):"auto",
         top:isMobile?0:"auto",height:isMobile?"100vh":"auto",
         zIndex:isMobile?50:1,
         transition:"left .25s ease",
-        boxShadow:isMobile&&sidebarOpen?`4px 0 20px ${t.shadowColor}`:"none"
+        boxShadow:isMobile&&sidebarOpen?`8px 0 40px rgba(0,0,0,.5)`:"none"
       }}>
         {/* Logo */}
-        <div style={{padding:"18px 18px 14px",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <div className="brain-logo" style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,boxShadow:"0 6px 22px rgba(110,0,255,.4)"}}>🧠</div>
-            <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:16,color:t.text,letterSpacing:"-0.4px"}}>pazent.brain</div><div style={{fontSize:12,color:t.muted}}>{notes.length} note{notes.length>1?"s":""}</div></div>
-            <div style={{display:"flex",gap:2}}>
-              <button onClick={toggleTheme} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:6,borderRadius:6,fontSize:14}} title={darkMode?"Mode clair":"Mode sombre"}>{darkMode?"☀️":"🌙"}</button>
-              <button onClick={fetchNotes} style={{background:"none",border:"none",cursor:"pointer",color:t.muted,padding:6,borderRadius:6}} title="Rafraîchir"><RefreshCw size={14}/></button>
+        <div style={{padding:"22px 20px 18px",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:13}}>
+            <div className="brain-logo" style={{width:44,height:44,borderRadius:14,background:"linear-gradient(135deg,#6e00ff,#00d4ff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🧠</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:800,fontSize:17,color:t.text,letterSpacing:"-0.4px",background:`linear-gradient(135deg,${t.text},${t.accent})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>pazent.brain</div>
+              <div style={{fontSize:12,color:t.muted,marginTop:1,display:"flex",alignItems:"center",gap:6}}>
+                <span style={{width:6,height:6,borderRadius:999,background:"#22c55e",boxShadow:"0 0 8px #22c55e"}}/>
+                {notes.length} note{notes.length>1?"s":""}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:3}}>
+              <button onClick={toggleTheme} style={{background:t.surface2,border:`1px solid ${t.border}`,cursor:"pointer",color:t.muted,padding:7,borderRadius:9,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}} title={darkMode?"Mode clair":"Mode sombre"}>{darkMode?"☀️":"🌙"}</button>
+              <button onClick={fetchNotes} style={{background:t.surface2,border:`1px solid ${t.border}`,cursor:"pointer",color:t.muted,padding:7,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center"}} title="Rafraîchir"><RefreshCw size={14}/></button>
             </div>
           </div>
         </div>
