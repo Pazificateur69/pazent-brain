@@ -5,11 +5,15 @@ export async function GET() {
   const owner = process.env.GITHUB_OWNER || "Pazificateur69";
   const repo = process.env.GITHUB_REPO || "pazent-brain-notes";
 
+  const rawPw = process.env.APP_PASSWORD;
   const env = {
     GITHUB_TOKEN_present: !!token,
     GITHUB_OWNER: owner,
+    GITHUB_OWNER_has_whitespace: owner !== owner.trim(),
     GITHUB_REPO: repo,
-    APP_PASSWORD_present: !!process.env.APP_PASSWORD,
+    GITHUB_REPO_has_whitespace: repo !== repo.trim(),
+    APP_PASSWORD_present: !!rawPw,
+    APP_PASSWORD_has_whitespace: rawPw ? rawPw !== rawPw.trim() : false,
   };
 
   if (!token) {

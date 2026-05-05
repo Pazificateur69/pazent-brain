@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkAuth } from "../../../lib/auth";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const OWNER = process.env.GITHUB_OWNER || "Pazificateur69";
-const REPO = process.env.GITHUB_REPO || "pazent-brain-notes";
+const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
+const REPO = (process.env.GITHUB_REPO || "pazent-brain-notes").trim();
 
 async function ghFetch(path: string, options?: RequestInit) {
   const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
@@ -20,9 +21,7 @@ async function ghFetch(path: string, options?: RequestInit) {
 
 // Move/rename a note: copy to new path, delete old
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!checkAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { oldPath, newPath } = await req.json();
   if (!oldPath || !newPath) return NextResponse.json({ error: "Missing paths" }, { status: 400 });

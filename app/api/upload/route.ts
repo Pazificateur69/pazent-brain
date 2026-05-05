@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkAuth } from "../../../lib/auth";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const OWNER = process.env.GITHUB_OWNER || "Pazificateur69";
-const REPO = process.env.GITHUB_REPO || "pazent-brain-notes";
-
-function checkAuth(req: NextRequest) {
-  return req.headers.get("x-app-password") === process.env.APP_PASSWORD;
-}
+const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
+const REPO = (process.env.GITHUB_REPO || "pazent-brain-notes").trim();
 
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

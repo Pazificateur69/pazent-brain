@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listNotes, getNote, saveNote, deleteNote } from "../../../lib/github";
-
-function checkAuth(req: NextRequest) {
-  const auth = req.headers.get("x-app-password");
-  return auth === process.env.APP_PASSWORD;
-}
+import { checkAuth } from "../../../lib/auth";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

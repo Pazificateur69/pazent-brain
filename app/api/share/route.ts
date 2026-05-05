@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkAuth } from "../../../lib/auth";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const OWNER = process.env.GITHUB_OWNER || "Pazificateur69";
-const REPO = process.env.GITHUB_REPO || "pazent-brain-notes";
+const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
+const REPO = (process.env.GITHUB_REPO || "pazent-brain-notes").trim();
 
 // Shared notes stored in notes/_shared/ folder
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!checkAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { path, title, content } = await req.json();
   const shareId = Buffer.from(path + Date.now()).toString("base64url").slice(0, 16);
@@ -42,9 +41,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!checkAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { shareId } = await req.json();
   const sharePath = `notes/_shared/${shareId}.json`;
   const check = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${sharePath}`, {
