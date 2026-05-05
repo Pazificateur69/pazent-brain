@@ -1,6 +1,6 @@
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const OWNER = process.env.GITHUB_OWNER || "Pazificateur69";
-const REPO = process.env.GITHUB_REPO || "pazent-brain-notes";
+const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
+const REPO = (process.env.GITHUB_REPO || "pazent-brain-notes").trim();
 
 const BASE = "https://api.github.com";
 
@@ -13,7 +13,7 @@ async function ghFetch(path: string, options?: RequestInit) {
       "Content-Type": "application/json",
       ...((options?.headers as Record<string, string>) || {}),
     },
-    next: { revalidate: 0 },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`GitHub API error: ${res.status} ${await res.text()}`);
   return res.json();
@@ -46,18 +46,23 @@ export function extractTagsFromContent(content: string): string[] {
 
 export async function listNotes(dir = "notes"): Promise<Note[]> {
   try {
-    const items = await ghFetch(`/repos/${OWNER}/${REPO}/contents/${dir}`);
-    const notes: Note[] = [];
-    for (const item of items) {
-      if (item.type === "dir") {
-        const sub = await listNotes(item.path);
-        notes.push(...sub);
-      } else if (item.name.endsWith(".md") && item.name !== ".gitkeep") {
-        notes.push({ path: item.path, name: item.name.replace(".md", ""), sha: item.sha });
-      }
-    }
-    return notes;
-  } catch {
+    const ref = await ghFetch(`/repos/${OWNER}/${REPO}/git/ref/heads/main`);
+    const tree = await ghFetch(`/repos/${OWNER}/${REPO}/git/trees/${ref.object.sha}?recursive=1`);
+    const prefix = dir.endsWith("/") ? dir : `${dir}/`;
+    return tree.tree
+      .filter((f: { path: string; type: string; sha: string }) =>
+        f.type === "blob" &&
+        f.path.startsWith(prefix) &&
+        f.path.endsWith(".md") &&
+        !f.path.endsWith("/.gitkeep")
+      )
+      .map((f: { path: string; sha: string }) => ({
+        path: f.path,
+        name: f.path.split("/").pop()!.replace(".md", ""),
+        sha: f.sha,
+      }));
+  } catch (e) {
+    console.error("listNotes failed:", e);
     return [];
   }
 }
