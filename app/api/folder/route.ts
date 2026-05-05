@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkAuth } from "../../../lib/auth";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
-const OWNER = process.env.GITHUB_OWNER || "Pazificateur69";
-const REPO = process.env.GITHUB_REPO || "pazent-brain-notes";
+const OWNER = (process.env.GITHUB_OWNER || "Pazificateur69").trim();
+const REPO = (process.env.GITHUB_REPO || "pazent-brain-notes").trim();
 
 // Create a folder by creating a .gitkeep file inside it
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-app-password") !== process.env.APP_PASSWORD) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!checkAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { path } = await req.json();
   if (!path) return NextResponse.json({ error: "Missing path" }, { status: 400 });
